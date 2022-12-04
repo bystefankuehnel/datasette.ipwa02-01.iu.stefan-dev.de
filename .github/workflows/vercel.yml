@@ -1,0 +1,60 @@
+name: Vercel
+
+on:
+  push:
+  workflow_dispatch:
+  
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Setup Python
+        id: python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Configure pip Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ steps.python.outputs.python-version }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Download Excel Dump
+        run: |-
+          curl \
+            --silent \
+            --show-error \
+            --location \
+            --output emissions.xls \
+            https://api.worldbank.org/v2/en/indicator/EN.ATM.CO2E.KT?downloadformat=excel
+      - name: Convert Excel Dump To CSV
+        run: |-
+          in2csv emissions.xls \
+            --skip-lines 3 \
+            --sheet Data \
+            > emissions.csv
+      - name: Create SQLite Database
+        run: |-
+          csvs-to-sqlite \
+            emissions.csv \
+            emissions.db
+      - name: Setup Vercel
+        run: npm install --global vercel
+      - name: Deploy On Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |-
+          datasette publish vercel emissions.db \
+            --branch main \
+            --metadata metadata.json \
+            --token $VERCEL_TOKEN \
+            --project  datasette-ipwa02-01-iu-stefan-dev-de \
+            --install datasette-graphql \
+            --public

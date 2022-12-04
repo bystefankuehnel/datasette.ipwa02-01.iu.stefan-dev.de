@@ -1,0 +1,9 @@
+{
+    "title": "CO2 emissions (kt)",
+    "license": "CC BY-NC 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
+    "source": "The World Bank Group",
+    "source_url": "https://data.worldbank.org/indicator/EN.ATM.CO2E.KT",
+    "about": "datasette.ipwa02-01.iu.stefan-dev.de",
+    "about_url": "https://github.com/bystefankuehnel/datasette.ipwa02-01.iu.stefan-dev.de"
+}
